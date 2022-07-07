@@ -40,7 +40,6 @@ public class BooleanSearchEngine implements SearchEngine {
                 }
             }
         }
-
     }
 
     @Override
