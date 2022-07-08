@@ -15,7 +15,7 @@ public class BooleanSearchEngine implements SearchEngine {
         index(pdfsDir);
     }
 
-    private void index(File pdfsDir) throws IOException {
+    private Map<String, List<PageEntry>> index(File pdfsDir) throws IOException {
         File[] pdfs = pdfsDir.listFiles();
         for (File pdf : pdfs) {
             var doc = new PdfDocument(new PdfReader(pdf));
@@ -25,23 +25,22 @@ public class BooleanSearchEngine implements SearchEngine {
                 var words = text.split("\\P{IsAlphabetic}+");
 
                 Map<String, Integer> freqs = getWordFrequency(words);
-                fillIndex(pdf, doc, page, freqs);
+
+                for (Map.Entry<String, Integer> entries : freqs.entrySet()) {
+                    PageEntry entry = new PageEntry(pdf.getName(), doc.getPageNumber(page), entries.getValue());
+                    if (index.containsKey(entries.getKey())) {
+                        index.get(entries.getKey()).add(entry);
+                    } else {
+                        List<PageEntry> pageEntryList = new ArrayList<>();
+                        pageEntryList.add(entry);
+                        index.put(entries.getKey(), pageEntryList);
+                    }
+                }
             }
         }
+        return index;
     }
 
-    private void fillIndex(File pdf, PdfDocument doc, PdfPage page, Map<String, Integer> freqs) {
-        for (Map.Entry<String, Integer> entries : freqs.entrySet()) {
-            PageEntry entry = new PageEntry(pdf.getName(), doc.getPageNumber(page), entries.getValue());
-            if (index.containsKey(entries.getKey())) {
-                index.get(entries.getKey()).add(entry);
-            } else {
-                List<PageEntry> pageEntryList = new ArrayList<>();
-                pageEntryList.add(entry);
-                index.put(entries.getKey(), pageEntryList);
-            }
-        }
-    }
 
     private Map<String, Integer> getWordFrequency(String[] words) {
         Map<String, Integer> freqs = new HashMap<>();
